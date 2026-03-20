@@ -2,7 +2,7 @@ package com.inventory.controller;
 
 import com.inventory.repository.RoleRepository;
 import com.inventory.model.User;
-import com.inventory.service.AuditLogService;
+// import com.inventory.service.AuditLogService;
 import com.inventory.service.ShopService;
 import com.inventory.service.UserService;
 import lombok.RequiredArgsConstructor;
@@ -23,7 +23,7 @@ public class AdminController {
     private final UserService userService;
     private final ShopService shopService;
     private final RoleRepository roleRepository;
-    private final AuditLogService auditLogService;
+    // private final AuditLogService auditLogService;
 
     @GetMapping("/users")
     @PreAuthorize("hasAnyRole('ORGANIZATION_ADMIN','SHOP_MANAGER')")
@@ -110,9 +110,9 @@ public class AdminController {
                 shopService.assignManagerForOwner(resolvedShop.getId(), newUser.getId(), actor);
             }
 
-            auditLogService.log(admin.getUsername(), "CREATE_USER", "User",
-                    String.valueOf(newUser.getId()), "Created user: " + username + " with role " + resolvedRole);
-            redirectAttributes.addFlashAttribute("successMessage", "User '" + username + "' created successfully.");
+            // auditLogService.log(admin.getUsername(), "CREATE_USER", "User",
+            //         String.valueOf(newUser.getId()), "Created user: " + username + " with role " + resolvedRole);
+            // redirectAttributes.addFlashAttribute("successMessage", "User '" + username + "' created successfully.");
         } catch (IllegalArgumentException e) {
             redirectAttributes.addFlashAttribute("errorMessage", e.getMessage());
         } catch (com.inventory.exception.DuplicateEmailException e) {
@@ -137,8 +137,8 @@ public class AdminController {
                              @AuthenticationPrincipal UserDetails admin,
                              RedirectAttributes redirectAttributes) {
         userService.updateUser(id, username, roleName);
-        auditLogService.log(admin.getUsername(), "UPDATE_USER", "User", String.valueOf(id),
-                "Username set to '" + username + "', role to '" + roleName + "'");
+        // auditLogService.log(admin.getUsername(), "UPDATE_USER", "User", String.valueOf(id),
+        //         "Username set to '" + username + "', role to '" + roleName + "'");
         redirectAttributes.addFlashAttribute("successMessage", "User updated successfully.");
         return "redirect:/admin/users";
     }
@@ -150,8 +150,8 @@ public class AdminController {
                                    RedirectAttributes redirectAttributes) {
         var user = userService.toggleActive(id);
         String status = user.isActive() ? "activated" : "deactivated";
-        auditLogService.log(admin.getUsername(), "TOGGLE_USER", "User", String.valueOf(id),
-                "Account " + status);
+        // auditLogService.log(admin.getUsername(), "TOGGLE_USER", "User", String.valueOf(id),
+        //         "Account " + status);
         redirectAttributes.addFlashAttribute("successMessage",
                 "User account has been " + status + ".");
         return "redirect:/admin/users";
@@ -168,7 +168,7 @@ public class AdminController {
             return "redirect:/admin/users/" + id + "/edit";
         }
         userService.resetPassword(id, newPassword);
-        auditLogService.log(admin.getUsername(), "RESET_PASSWORD", "User", String.valueOf(id), "Password reset by admin");
+        // auditLogService.log(admin.getUsername(), "RESET_PASSWORD", "User", String.valueOf(id), "Password reset by admin");
         redirectAttributes.addFlashAttribute("successMessage", "Password reset successfully.");
         return "redirect:/admin/users";
     }
@@ -178,7 +178,7 @@ public class AdminController {
     public String auditLogs(@AuthenticationPrincipal UserDetails admin, Model model) {
         User owner = userService.getByEmail(admin.getUsername());
         if (owner.getOrganization() != null) {
-            model.addAttribute("logs", auditLogService.getRecentLogsForOrganization(owner.getOrganization().getId()));
+            // model.addAttribute("logs", auditLogService.getRecentLogsForOrganization(owner.getOrganization().getId()));
         } else {
             model.addAttribute("logs", java.util.List.of());
         }
