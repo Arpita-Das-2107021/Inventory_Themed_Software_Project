@@ -1,0 +1,93 @@
+﻿<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org"
+      xmlns:sec="http://www.thymeleaf.org/extras/springsecurity6">
+<head>
+    <meta charset="UTF-8"/>
+    <meta name="viewport" content="width=device-width, initial-scale=1"/>
+    <title>Add User — Inventory</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet"/>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.0/font/bootstrap-icons.css" rel="stylesheet"/>
+    <style>
+        body { padding-top: 56px; background-color: #f8f9fa; }
+        .navbar-brand { font-weight: 700; }
+    </style>
+</head>
+<body>
+<nav th:replace="~{fragments/nav :: appNavbar('management')}"></nav>
+
+<div class="container py-4" style="max-width: 520px;">
+    <div class="d-flex align-items-center mb-4">
+        <a href="/admin/users" class="btn btn-sm btn-outline-secondary me-3">
+            <i class="bi bi-arrow-left"></i>
+        </a>
+        <h1 class="h4 fw-bold mb-0"><i class="bi bi-person-plus me-2"></i>Add New User</h1>
+    </div>
+
+    <div th:if="${errorMessage}" class="alert alert-danger alert-dismissible fade show" role="alert">
+        <span th:text="${errorMessage}"></span>
+        <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+    </div>
+    <div th:if="${successMessage}" class="alert alert-success alert-dismissible fade show" role="alert">
+        <span th:text="${successMessage}"></span>
+        <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+    </div>
+
+    <div class="card shadow-sm">
+        <div class="card-body p-4">
+            <form th:action="@{/admin/users/new}" method="post" novalidate>
+                <div class="mb-3">
+                    <label class="form-label fw-semibold">Username</label>
+                    <input type="text" name="username" class="form-control"
+                           placeholder="Full name or display name" required/>
+                </div>
+                <div class="mb-3">
+                    <label class="form-label fw-semibold">Email</label>
+                    <input type="email" name="email" class="form-control"
+                           placeholder="user@example.com" required/>
+                </div>
+                <div class="mb-3">
+                    <label class="form-label fw-semibold">Role</label>
+                    <select name="roleName" class="form-select" th:disabled="${!isOwner}" required>
+                        <option value="ROLE_EMPLOYEE" th:selected="${!isOwner}">Employee (Seller)</option>
+                        <option value="ROLE_SHOP_MANAGER" th:if="${isOwner}">Shop Manager</option>
+                    </select>
+                    <input th:if="${!isOwner}" type="hidden" name="roleName" value="ROLE_EMPLOYEE"/>
+                    <div class="form-text text-muted" th:if="${!isOwner}">
+                        Shop admins can create employee accounts only.
+                    </div>
+                </div>
+                <div class="mb-3" th:if="${isOwner}">
+                    <label class="form-label fw-semibold">Shop</label>
+                    <select name="shopId" class="form-select" required>
+                        <option value="">-- Select Shop --</option>
+                        <option th:each="shop : ${shops}"
+                                th:value="${shop.id}"
+                                th:text="${shop.name}"></option>
+                    </select>
+                    <div class="form-text text-muted">Staff accounts are assigned to a selected shop.</div>
+                </div>
+                <div class="mb-3" th:if="${!isOwner}">
+                    <label class="form-label fw-semibold">Shop</label>
+                    <input type="text" class="form-control" th:value="${actorShopName != null ? actorShopName : 'Not Assigned'}" disabled/>
+                    <div class="form-text text-muted">New employees are automatically assigned to your shop.</div>
+                </div>
+                <div class="mb-3">
+                    <label class="form-label fw-semibold">Temporary Password</label>
+                    <input type="text" name="password" class="form-control"
+                           placeholder="Minimum 6 characters" required minlength="6"/>
+                    <div class="form-text text-muted">
+                        The user should change this after first login.
+                    </div>
+                </div>
+                <div class="d-grid mt-4">
+                    <button type="submit" class="btn btn-dark">
+                        <i class="bi bi-person-plus me-1"></i>Create User Account
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+</body>
+</html>

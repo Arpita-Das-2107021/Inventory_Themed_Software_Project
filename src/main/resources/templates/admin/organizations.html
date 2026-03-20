@@ -1,0 +1,95 @@
+﻿<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org"
+      xmlns:sec="http://www.thymeleaf.org/extras/springsecurity6">
+<head>
+    <meta charset="UTF-8"/>
+    <meta name="viewport" content="width=device-width, initial-scale=1"/>
+    <title>Organizations Inventory</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet"/>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.0/font/bootstrap-icons.css" rel="stylesheet"/>
+    <style>
+        body { padding-top: 56px; background-color: #f8f9fa; }
+        .navbar-brand { font-weight: 700; }
+    </style>
+</head>
+<body>
+<nav th:replace="~{fragments/nav :: appNavbar('management')}"></nav>
+
+<div class="container-fluid px-4 py-4">
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <h1 class="h3 fw-bold mb-0"><i class="bi bi-diagram-3 me-2"></i>Organizations</h1>
+        <a href="/organizations/new" class="btn btn-dark btn-sm">
+            <i class="bi bi-plus-lg me-1"></i>New Organization
+        </a>
+    </div>
+
+    <div th:if="${successMessage}" class="alert alert-success alert-dismissible fade show">
+        <span th:text="${successMessage}"></span>
+        <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+    </div>
+    <div th:if="${errorMessage}" class="alert alert-danger alert-dismissible fade show">
+        <span th:text="${errorMessage}"></span>
+        <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+    </div>
+
+    <div class="card">
+        <div class="table-responsive">
+            <table class="table table-hover align-middle mb-0">
+                <thead class="table-dark">
+                    <tr>
+                        <th>#</th>
+                        <th>Name</th>
+                        <th>Shops</th>
+                        <th>Created</th>
+                        <th>Actions</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr th:each="org : ${organizations}">
+                        <td th:text="${org.id}"></td>
+                        <td class="fw-semibold" th:text="${org.name}"></td>
+                        <td>
+                            <span class="badge bg-info" th:text="${org.shops != null ? org.shops.size() : 0}"></span>
+                        </td>
+                        <td class="small text-muted" th:text="${org.createdAt != null ? #temporals.format(org.createdAt, 'MMM d, yyyy') : '—'}"></td>
+                        <td>
+                            <div class="btn-group btn-group-sm">
+                                <a th:href="@{/organizations/{id}/edit(id=${org.id})}" class="btn btn-outline-primary" title="Edit">
+                                    <i class="bi bi-pencil"></i>
+                                </a>
+                                <form th:id="'del-org-' + ${org.id}" th:action="@{/organizations/{id}/delete(id=${org.id})}" method="post" style="display:inline;">
+                                    <button type="button" class="btn btn-outline-danger" title="Delete"
+                                            th:attr="data-org-name=${org.name}"
+                                            th:onclick="|confirmDelete('del-org-${org.id}', this.getAttribute('data-org-name'))|">
+                                        <i class="bi bi-trash"></i>
+                                    </button>
+                                </form>
+                            </div>
+                        </td>
+                    </tr>
+                    <tr th:if="${#lists.isEmpty(organizations)}">
+                        <td colspan="5" class="text-center text-muted py-4">No organizations found. Create one above.</td>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+<script>
+function confirmDelete(formId, itemName) {
+    Swal.fire({
+        title: 'Delete "' + itemName + '"?',
+        text: 'This action cannot be undone.',
+        icon: 'warning',
+        showCancelButton: true,
+        confirmButtonColor: '#dc3545',
+        cancelButtonColor: '#6c757d',
+        confirmButtonText: 'Yes, delete it!'
+    }).then((result) => { if (result.isConfirmed) { document.getElementById(formId).submit(); } });
+}
+</script>
+</body>
+</html>
+

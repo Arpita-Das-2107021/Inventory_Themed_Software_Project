@@ -1,0 +1,93 @@
+﻿<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org"
+      xmlns:sec="http://www.thymeleaf.org/extras/springsecurity6">
+<head>
+    <meta charset="UTF-8"/>
+    <meta name="viewport" content="width=device-width, initial-scale=1"/>
+    <title>User Management Inventory</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet"/>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.0/font/bootstrap-icons.css" rel="stylesheet"/>
+    <style>
+        body { padding-top: 56px; background-color: #f8f9fa; }
+        .navbar-brand { font-weight: 700; }
+    </style>
+</head>
+<body>
+<nav th:replace="~{fragments/nav :: appNavbar('management')}"></nav>
+
+<div class="container-fluid px-4 py-4">
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <h1 class="h3 fw-bold mb-0"><i class="bi bi-people me-2"></i>User Management</h1>
+        <a href="/admin/users/new" class="btn btn-dark btn-sm">
+            <i class="bi bi-person-plus me-1"></i><span th:text="${isOwner} ? 'Add Staff' : 'Add Employee'">Add Staff</span>
+        </a>
+    </div>
+
+    <div th:if="${successMessage}" class="alert alert-success alert-dismissible fade show">
+        <span th:text="${successMessage}"></span>
+        <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+    </div>
+    <div th:if="${errorMessage}" class="alert alert-danger alert-dismissible fade show">
+        <span th:text="${errorMessage}"></span>
+        <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+    </div>
+
+    <div class="card">
+        <div class="table-responsive">
+            <table class="table table-hover align-middle mb-0">
+                <thead class="table-dark">
+                    <tr>
+                        <th>#</th>
+                        <th>Username</th>
+                        <th>Email</th>
+                        <th>Shop</th>
+                        <th>Role</th>
+                        <th>Status</th>
+                        <th th:if="${isOwner}">Actions</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr th:each="u : ${users}" th:classappend="${!u.active} ? 'table-secondary'">
+                        <td th:text="${u.id}"></td>
+                        <td class="fw-semibold" th:text="${u.username}"></td>
+                        <td th:text="${u.email}"></td>
+                        <td th:text="${u.shop != null ? u.shop.name : 'Unassigned'}"></td>
+                        <td>
+                            <span th:each="r : ${u.roles}" class="badge"
+                                  th:classappend="${r.name == 'ROLE_ORGANIZATION_ADMIN'} ? 'bg-danger' : (${r.name == 'ROLE_SHOP_MANAGER'} ? 'bg-primary' : 'bg-success')"
+                                  th:text="${r.name.replace('ROLE_', '')}"></span>
+                        </td>
+                        <td>
+                            <span th:if="${u.active}" class="badge bg-success">Active</span>
+                            <span th:unless="${u.active}" class="badge bg-secondary">Inactive</span>
+                        </td>
+                        <td th:if="${isOwner}">
+                            <div class="btn-group btn-group-sm">
+                                <a th:href="@{/admin/users/{id}/edit(id=${u.id})}"
+                                   class="btn btn-outline-primary" title="Edit">
+                                    <i class="bi bi-pencil"></i>
+                                </a>
+                                <form th:action="@{/admin/users/{id}/toggle(id=${u.id})}" method="post" style="display:inline;">
+                                    <button type="submit" class="btn"
+                                            th:classappend="${u.active} ? 'btn-outline-warning' : 'btn-outline-success'"
+                                            th:title="${u.active} ? 'Deactivate' : 'Activate'">
+                                        <i class="bi" th:classappend="${u.active} ? 'bi-person-dash' : 'bi-person-check'"></i>
+                                    </button>
+                                </form>
+                            </div>
+                        </td>
+                    </tr>
+                    <tr th:if="${#lists.isEmpty(users)}">
+                        <td th:attr="colspan=${isOwner} ? 7 : 6" class="text-center text-muted py-4">No users found.</td>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+</body>
+</html>
+
+
+
