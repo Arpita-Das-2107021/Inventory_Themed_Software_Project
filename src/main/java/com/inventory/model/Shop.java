@@ -22,20 +22,4 @@ public class Shop {
     private Long id;
     @Column(nullable = false)
     private String name;
-    @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "organization_id")
-    private Organization organization;
-    @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "manager_id")
-    private User manager;
-    @CreationTimestamp
-    @Column(name = "created_at", updatable = false)
-    private LocalDateTime createdAt;
-    @OneToMany(mappedBy = "shop", cascade = CascadeType.ALL, orphanRemoval = false)
-    @Builder.Default
-    private List<Product> products = new ArrayList<>();
-    @OneToMany(mappedBy = "shop", cascade = CascadeType.ALL, orphanRemoval = false)
-    @Builder.Default
-    private List<Sale> sales = new ArrayList<>();
-// Close the current code block.
 }
