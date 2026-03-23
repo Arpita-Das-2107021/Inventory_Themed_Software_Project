@@ -2,7 +2,7 @@ package com.inventory.controller;
 
 import com.inventory.repository.RoleRepository;
 import com.inventory.model.User;
-// import com.inventory.service.AuditLogService;
+import com.inventory.service.AuditLogService;
 import com.inventory.service.ShopService;
 import com.inventory.service.UserService;
 import lombok.RequiredArgsConstructor;
@@ -23,7 +23,7 @@ public class AdminController {
     private final UserService userService; // user operations
     private final ShopService shopService; // shop operations
     private final RoleRepository roleRepository; // role data
-    // private final AuditLogService auditLogService; // logging
+    private final AuditLogService auditLogService; // logging
 
     // ===== GET ALL USERS =====
     @GetMapping("/users")
@@ -161,6 +161,9 @@ public class AdminController {
             }
 
             // save log
+            auditLogService.log(admin.getUsername(), "CREATE_USER", "User",
+                    String.valueOf(newUser.getId()),
+                    "Created user: " + username);
 
             redirectAttributes.addFlashAttribute("successMessage",
                     "User created successfully.");
@@ -196,7 +199,8 @@ public class AdminController {
         userService.updateUser(id, username, roleName); // update
 
         // log update
-
+        auditLogService.log(admin.getUsername(), "UPDATE_USER", "User",
+                String.valueOf(id), "Updated user");
 
         redirectAttributes.addFlashAttribute("successMessage",
                 "User updated.");
@@ -217,7 +221,8 @@ public class AdminController {
         String status = user.isActive() ? "activated" : "deactivated";
 
         // log action
-
+        auditLogService.log(admin.getUsername(), "TOGGLE_USER",
+                "User", String.valueOf(id), "Account " + status);
 
         redirectAttributes.addFlashAttribute("successMessage",
                 "User " + status);
@@ -244,7 +249,8 @@ public class AdminController {
         userService.resetPassword(id, newPassword); // reset password
 
         // log
-
+        auditLogService.log(admin.getUsername(), "RESET_PASSWORD",
+                "User", String.valueOf(id), "Password reset");
 
         redirectAttributes.addFlashAttribute("successMessage",
                 "Password reset done.");
@@ -253,5 +259,21 @@ public class AdminController {
     }
 
     // ===== AUDIT LOGS =====
+    @GetMapping("/logs")
+    @PreAuthorize("hasRole('ORGANIZATION_ADMIN')")
+    public String auditLogs(@AuthenticationPrincipal UserDetails admin, Model model) {
 
+        User owner = userService.getByEmail(admin.getUsername());
+
+        // load logs if org exists
+        if (owner.getOrganization() != null) {
+            model.addAttribute("logs",
+                    auditLogService.getRecentLogsForOrganization(
+                            owner.getOrganization().getId()));
+        } else {
+            model.addAttribute("logs", java.util.List.of());
+        }
+
+        return "admin/logs";
+    }
 }

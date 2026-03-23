@@ -67,6 +67,7 @@ class SaleServiceTest {
 
         SaleRequest req = new SaleRequest();
         req.setItems(List.of(itemReq));
+        req.setBuyerName("Test Buyer");
         // Return a value from this method.
         return req;
     // Close the current code block.

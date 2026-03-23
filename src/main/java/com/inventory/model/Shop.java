@@ -31,11 +31,11 @@ public class Shop {
     @CreationTimestamp
     @Column(name = "created_at", updatable = false)
     private LocalDateTime createdAt;
-    // @OneToMany(mappedBy = "shop", cascade = CascadeType.ALL, orphanRemoval = false)
-    // @Builder.Default
-    // private List<Product> products = new ArrayList<>();
-    // @OneToMany(mappedBy = "shop", cascade = CascadeType.ALL, orphanRemoval = false)
-    // @Builder.Default
-    // private List<Sale> sales = new ArrayList<>();
+    @OneToMany(mappedBy = "shop", cascade = CascadeType.ALL, orphanRemoval = false)
+    @Builder.Default
+    private List<Product> products = new ArrayList<>();
+    @OneToMany(mappedBy = "shop", cascade = CascadeType.ALL, orphanRemoval = false)
+    @Builder.Default
+    private List<Sale> sales = new ArrayList<>();
 // Close the current code block.
 }

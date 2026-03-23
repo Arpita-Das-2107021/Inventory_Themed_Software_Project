@@ -1,52 +1,86 @@
-// Define the package for this class.
+// Define the package where this service belongs
 package com.inventory.service;
 
+// Custom exception when resource is not found
 import com.inventory.exception.ResourceNotFoundException;
+
+// Category model (data object)
 import com.inventory.model.Category;
+
+// Repository for database operations
 import com.inventory.repository.CategoryRepository;
+
+// Lombok: auto constructor for final fields
 import lombok.RequiredArgsConstructor;
+
+// Marks this class as a service (business logic layer)
 import org.springframework.stereotype.Service;
+
+// Used for database transaction management
 import org.springframework.transaction.annotation.Transactional;
 
+// List collection
 import java.util.List;
+
+// Marks this class as Spring service
 @Service
+
+// Generates constructor automatically
 @RequiredArgsConstructor
-// Define a public class.
+
+// Service class for Category
 public class CategoryService {
+
+    // Repository to interact with database
     private final CategoryRepository categoryRepository;
-    @Transactional(readOnly = true)
+
+    // ===================== GET ALL CATEGORIES =====================
+    @Transactional(readOnly = true) // read-only for performance
     public List<Category> getAllCategories() {
-        // Return a value from this method.
+
+        // Fetch all categories from DB
         return categoryRepository.findAll();
-    // Close the current code block.
     }
+
+    // ===================== GET CATEGORY BY ID =====================
     @Transactional(readOnly = true)
     public Category getById(Long id) {
-        // Return a value from this method.
+
+        // Try to find category, if not found → throw exception
         return categoryRepository.findById(id)
-                // Set a configuration key and value.
-                .orElseThrow(() -> new ResourceNotFoundException("Category not found: " + id));
-    // Close the current code block.
+                .orElseThrow(() ->
+                        new ResourceNotFoundException("Category not found: " + id)
+                );
     }
+
+    // ===================== CREATE CATEGORY =====================
     @Transactional
     public Category create(Category category) {
-        // Return a value from this method.
+
+        // Save new category into DB
         return categoryRepository.save(category);
-    // Close the current code block.
     }
+
+    // ===================== UPDATE CATEGORY =====================
     @Transactional
     public Category update(Long id, Category updated) {
+
+        // Get existing category (or throw error if not found)
         Category existing = getById(id);
+
+        // Update fields
         existing.setName(updated.getName());
         existing.setDescription(updated.getDescription());
-        // Return a value from this method.
+
+        // Save updated category
         return categoryRepository.save(existing);
-    // Close the current code block.
     }
+
+    // ===================== DELETE CATEGORY =====================
     @Transactional
     public void delete(Long id) {
+
+        // First find category, then delete it
         categoryRepository.delete(getById(id));
-    // Close the current code block.
     }
-// Close the current code block.
 }

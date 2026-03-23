@@ -15,7 +15,14 @@ public class GlobalExceptionHandler {
         return "error/error";
     // Close the current code block.
     }
-
+    @ExceptionHandler(InsufficientStockException.class)
+    public String handleInsufficientStock(InsufficientStockException ex, Model model) {
+        model.addAttribute("errorCode", "400");
+        model.addAttribute("errorMessage", ex.getMessage());
+        // Return a value from this method.
+        return "error/error";
+    // Close the current code block.
+    }
     @ExceptionHandler(DuplicateEmailException.class)
     public String handleDuplicateEmail(DuplicateEmailException ex, Model model) {
         model.addAttribute("errorCode", "400");

@@ -1,33 +1,8 @@
-# Maven / Java
-/target/
-**/target/
-*.class
-*.log
-
-# IntelliJ
-.idea/
-*.iml
-
-# Eclipse
-.classpath
-.project
-.settings/
-
-# VSCode
-.vscode/
-
-# OS files
-.DS_Store
-Thumbs.db
-
-# Environment
-.env
-
-# Generated resources
-/generated-sources/
-/generated-test-sources/
 # Compiled class file
 *.class
+
+# Maven build output
+target/
 
 # Log file
 *.log
