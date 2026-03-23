@@ -1,0 +1,54 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org"
+      xmlns:sec="http://www.thymeleaf.org/extras/springsecurity6">
+<head>
+    <meta charset="UTF-8"/>
+    <meta name="viewport" content="width=device-width, initial-scale=1"/>
+    <title>Seller Activity Inventory</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet"/>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.0/font/bootstrap-icons.css" rel="stylesheet"/>
+    <style>
+        body { padding-top: 56px; background-color: #f8f9fa; }
+        .navbar-brand { font-weight: 700; }
+    </style>
+</head>
+<body>
+<nav th:replace="~{fragments/nav :: appNavbar('reports')}"></nav>
+
+<div class="container-fluid px-4 py-4">
+    <h1 class="h3 fw-bold mb-4"><i class="bi bi-people me-2"></i>Seller Activity Report</h1>
+
+    <div class="card">
+        <div class="table-responsive">
+            <table class="table table-hover align-middle mb-0">
+                <thead class="table-dark">
+                    <tr>
+                        <th>Seller</th>
+                        <th>Email</th>
+                        <th class="text-center">Total Sales</th>
+                        <th class="text-end">Total Revenue</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <!-- sellerStats is List<Object[]>: [0]=User, [1]=count, [2]=sum -->
+                    <tr th:each="row : ${sellerStats}">
+                        <td class="fw-semibold" th:text="${row[0].username}"></td>
+                        <td class="text-muted" th:text="${row[0].email}"></td>
+                        <td class="text-center" th:text="${row[1]}"></td>
+                        <td class="text-end fw-bold"
+                            th:text="'$' + ${#numbers.formatDecimal(row[2], 1, 2)}"></td>
+                    </tr>
+                    <tr th:if="${#lists.isEmpty(sellerStats)}">
+                        <td colspan="4" class="text-center text-muted py-4">No sales data available.</td>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+</body>
+</html>
+
+
+

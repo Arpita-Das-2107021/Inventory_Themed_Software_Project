@@ -1,0 +1,194 @@
+<!doctype html>
+<html
+  xmlns:th="http://www.thymeleaf.org"
+  xmlns:sec="http://www.thymeleaf.org/extras/springsecurity6"
+>
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Adjust Stock Inventory</title>
+    <link
+      href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css"
+      rel="stylesheet"
+    />
+    <link
+      href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.0/font/bootstrap-icons.css"
+      rel="stylesheet"
+    />
+    <style>
+      body {
+        padding-top: 56px;
+        background-color: #f8f9fa;
+      }
+      .navbar-brand {
+        font-weight: 700;
+      }
+    </style>
+  </head>
+  <body>
+    <nav th:replace="~{fragments/nav :: appNavbar('products')}"></nav>
+
+    <div class="container py-4" style="max-width: 720px">
+      <div class="d-flex align-items-center mb-4">
+        <a href="/products" class="btn btn-outline-secondary btn-sm me-3">
+          <i class="bi bi-arrow-left"></i> Back
+        </a>
+        <h1 class="h3 fw-bold mb-0">
+          <i class="bi bi-arrow-left-right me-2"></i>Adjust Stock:
+          <span th:text="${product.name}"></span>
+        </h1>
+      </div>
+
+      <!-- Current stock info -->
+      <div class="row g-3 mb-4">
+        <div class="col-md-4">
+          <div class="card text-center">
+            <div class="card-body">
+              <div class="text-muted small">Current Stock</div>
+              <div
+                class="fs-2 fw-bold"
+                th:classappend="${product.lowStock} ? 'text-danger' : 'text-success'"
+                th:text="${product.stockQuantity}"
+              >
+                0
+              </div>
+            </div>
+          </div>
+        </div>
+        <div class="col-md-4">
+          <div class="card text-center">
+            <div class="card-body">
+              <div class="text-muted small">Low Stock Threshold</div>
+              <div class="fs-2 fw-bold" th:text="${product.lowStockThreshold}">
+                0
+              </div>
+            </div>
+          </div>
+        </div>
+        <div class="col-md-4">
+          <div class="card text-center">
+            <div class="card-body">
+              <div class="text-muted small">Status</div>
+              <span
+                th:if="${product.lowStock}"
+                class="badge bg-warning text-dark fs-6 mt-2"
+                >Low Stock</span
+              >
+              <span
+                th:unless="${product.lowStock}"
+                class="badge bg-success fs-6 mt-2"
+                >OK</span
+              >
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Adjustment Form -->
+      <div class="card shadow-sm mb-4">
+        <div class="card-header"><h5 class="mb-0">Stock Adjustment</h5></div>
+        <div class="card-body p-4">
+          <form
+            th:action="@{/products/{id}/stock(id=${product.id})}"
+            th:object="${stockAdjustmentRequest}"
+            method="post"
+            novalidate
+          >
+            <input type="hidden" name="_method" value="PATCH" />
+
+            <div class="mb-3">
+              <label for="type" class="form-label fw-semibold"
+                >Transaction Type <span class="text-danger">*</span></label
+              >
+              <select id="type" th:field="*{type}" class="form-select">
+                <option value="RESTOCK">RESTOCK — Add stock</option>
+                <option value="INCREASE">INCREASE — Manual increase</option>
+                <option value="DECREASE">DECREASE — Manual decrease</option>
+              </select>
+            </div>
+
+            <div class="mb-3">
+              <label for="quantity" class="form-label fw-semibold"
+                >Quantity <span class="text-danger">*</span></label
+              >
+              <input
+                type="number"
+                id="quantity"
+                th:field="*{quantity}"
+                class="form-control"
+                th:classappend="${#fields.hasErrors('quantity')} ? 'is-invalid'"
+                min="1"
+                placeholder="Enter quantity"
+              />
+              <div
+                class="invalid-feedback"
+                th:if="${#fields.hasErrors('quantity')}"
+                th:errors="*{quantity}"
+              ></div>
+            </div>
+
+            <div class="mb-3">
+              <label for="reason" class="form-label fw-semibold"
+                >Reason (optional)</label
+              >
+              <input
+                type="text"
+                id="reason"
+                th:field="*{reason}"
+                class="form-control"
+                placeholder="e.g. Monthly restock"
+              />
+            </div>
+
+            <div class="d-flex gap-2">
+              <button type="submit" class="btn btn-dark">
+                <i class="bi bi-check-lg me-1"></i>Apply Adjustment
+              </button>
+              <a href="/products" class="btn btn-outline-secondary">Cancel</a>
+            </div>
+          </form>
+        </div>
+      </div>
+
+      <!-- History Table -->
+      <div class="card" th:if="${history != null and !#lists.isEmpty(history)}">
+        <div class="card-header"><h5 class="mb-0">Stock History</h5></div>
+        <div class="table-responsive">
+          <table class="table table-sm table-hover mb-0">
+            <thead class="table-light">
+              <tr>
+                <th>Date</th>
+                <th>Type</th>
+                <th>Quantity</th>
+                <th>Reason</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr th:each="tx : ${history}">
+                <td
+                  th:text="${#temporals.format(tx.createdAt, 'dd MMM yyyy HH:mm')}"
+                ></td>
+                <td>
+                  <span
+                    class="badge"
+                    th:classappend="${tx.type == 'SALE'} ? 'bg-danger' :
+                                                  (${tx.type == 'RESTOCK'} ? 'bg-success' : 'bg-secondary')"
+                    th:text="${tx.type}"
+                  ></span>
+                </td>
+                <td>
+                  <span
+                    th:classappend="${tx.quantity < 0} ? 'text-danger' : 'text-success'"
+                    th:text="${tx.quantity > 0 ? '+' + tx.quantity : tx.quantity}"
+                  ></span>
+                </td>
+                <td class="text-muted small" th:text="${tx.reason}"></td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+  </body>
+</html>

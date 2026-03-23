@@ -1,0 +1,70 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org"
+      xmlns:sec="http://www.thymeleaf.org/extras/springsecurity6">
+<head>
+    <meta charset="UTF-8"/>
+    <meta name="viewport" content="width=device-width, initial-scale=1"/>
+    <title th:text="${pageTitle != null ? pageTitle + ' — Inventory' : 'Inventory Management'}">Inventory Management</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet"/>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.0/font/bootstrap-icons.css" rel="stylesheet"/>
+    <style>
+        body { padding-top: 56px; background-color: #f8f9fa; }
+        .navbar-brand { font-weight: 700; letter-spacing: 1px; }
+        .low-stock { background-color: #fff3cd !important; }
+        .card { border: none; box-shadow: 0 0.125rem 0.25rem rgba(0,0,0,.075); }
+        .stat-card { transition: transform .2s; }
+        .stat-card:hover { transform: translateY(-2px); }
+        .sidebar { min-height: calc(100vh - 56px); background-color: #fff; border-right: 1px solid #dee2e6; padding-top: 1rem; }
+    </style>
+    <th:block th:replace="${extraHead}"/>
+</head>
+<body>
+
+<!-- Navbar -->
+<nav th:replace="~{fragments/nav :: appNavbar('dashboard')}"></nav>
+
+<!-- Main content -->
+<div class="container-fluid px-4 py-3">
+    <!-- Flash messages -->
+    <div th:if="${successMessage}" class="alert alert-success alert-dismissible fade show" role="alert">
+        <i class="bi bi-check-circle me-2"></i>
+        <span th:text="${successMessage}"></span>
+        <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+    </div>
+    <div th:if="${errorMessage}" class="alert alert-danger alert-dismissible fade show" role="alert">
+        <i class="bi bi-exclamation-triangle me-2"></i>
+        <span th:text="${errorMessage}"></span>
+        <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+    </div>
+
+    <!-- Page content injected here -->
+    <th:block th:replace="${content}"/>
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+<script>
+function confirmDelete(formId, itemName) {
+    Swal.fire({
+        title: 'Delete ' + (itemName || 'this item') + '?',
+        text: 'This action cannot be undone.',
+        icon: 'warning',
+        showCancelButton: true,
+        confirmButtonColor: '#dc3545',
+        cancelButtonColor: '#6c757d',
+        confirmButtonText: 'Yes, delete it!',
+        cancelButtonText: 'Cancel'
+    }).then((result) => {
+        if (result.isConfirmed) {
+            document.getElementById(formId).submit();
+        }
+    });
+}
+</script>
+<th:block th:replace="${extraScript}"/>
+</body>
+</html>
+
+
+
+
