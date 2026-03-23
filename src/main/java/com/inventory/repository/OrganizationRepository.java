@@ -1,0 +1,15 @@
+// Define the package for this class.
+package com.inventory.repository;
+
+import com.inventory.model.Organization;
+import org.springframework.data.jpa.repository.JpaRepository;
+import org.springframework.stereotype.Repository;
+
+import java.util.Optional;
+@Repository
+// Define an interface.
+public interface OrganizationRepository extends JpaRepository<Organization, Long> {
+    Optional<Organization> findByName(String name);
+    boolean existsByName(String name);
+// Close the current code block.
+}

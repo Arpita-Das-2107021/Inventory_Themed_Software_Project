@@ -1,0 +1,158 @@
+﻿# Docker Compose lets you run multiple containers together.
+# In this project we run TWO containers:
+# 1) PostgreSQL database
+# 2) Spring Boot application
+
+services:
+
+  # --------------------------------------------------
+  # DATABASE CONTAINER
+  # --------------------------------------------------
+  db:
+
+    # Use the official PostgreSQL image from Docker Hub.
+    # Version 16 of PostgreSQL will be downloaded if not present.
+    image: postgres:16
+
+    # Automatically restart the container if it crashes.
+    # But if you manually stop it, Docker will not restart it.
+    restart: unless-stopped
+
+    # Environment variables configure PostgreSQL when it starts.
+    environment:
+
+      # Create a database with this name.
+      # If DB_NAME environment variable exists → use it.
+      # Otherwise default value = inventory_db
+      POSTGRES_DB: ${DB_NAME:-inventory_db}
+
+      # Database username.
+      # Uses DB_USERNAME environment variable if available.
+      # Otherwise default = postgres
+      POSTGRES_USER: ${DB_USERNAME:-postgres}
+
+      # Database password.
+      # Uses DB_PASSWORD if available.
+      # Otherwise default = password
+      POSTGRES_PASSWORD: ${DB_PASSWORD:-password}
+
+    ports:
+      # Map a port from your computer to the container.
+
+      # Format:
+      # host_port:container_port
+
+      - "5490:5432"
+
+      # Meaning:
+      # Your computer port 5490 → PostgreSQL container port 5432
+
+      # PostgreSQL default port inside container = 5432
+
+      # So you can connect from your PC using:
+      # localhost:5490
+
+    volumes:
+
+      # Attach a named Docker volume called "pgdata"
+      # to the PostgreSQL data directory inside the container.
+
+      - pgdata:/var/lib/postgresql/data
+
+      # Why this is important:
+
+      # PostgreSQL stores all database files here:
+      # /var/lib/postgresql/data
+
+      # Without volumes:
+      # If container stops or is deleted → database data is lost.
+
+      # With volumes:
+      # Docker stores the database safely on your computer.
+      # Data will survive container restarts.
+
+    healthcheck:
+
+      # Docker checks if PostgreSQL is ready before other services use it.
+
+      # pg_isready is a PostgreSQL command that checks if
+      # the database server is accepting connections.
+
+      test: ["CMD-SHELL", "pg_isready -U ${DB_USERNAME:-postgres} -d ${DB_NAME:-inventory_db}"]
+
+      # Check every 10 seconds
+      interval: 10s
+
+      # Wait up to 5 seconds for a response
+      timeout: 5s
+
+      # If it fails 5 times → container considered unhealthy
+      retries: 5
+
+
+  # --------------------------------------------------
+  # SPRING BOOT APPLICATION CONTAINER
+  # --------------------------------------------------
+  app:
+
+    # Build the Docker image using the Dockerfile
+    # located in the current project directory.
+    build: .
+
+    # Automatically restart the container if it crashes.
+    restart: unless-stopped
+
+    ports:
+
+      # Map container port to your computer.
+
+      # Format:
+      # host_port:container_port
+
+      - "8095:8080"
+
+      # Meaning:
+      # Your computer → port 8095
+      # Spring Boot container → port 8080
+
+      # So the application becomes accessible at:
+      # http://localhost:8095
+
+    environment:
+
+      # Spring Boot database connection URL.
+
+      # IMPORTANT:
+      # "db" is NOT localhost.
+      # It is the service name of the PostgreSQL container.
+
+      # Docker automatically creates a network where
+      # containers communicate using service names.
+
+      SPRING_DATASOURCE_URL: jdbc:postgresql://db:5432/${DB_NAME:-inventory_db}
+
+      # Database username used by Spring Boot to connect
+      SPRING_DATASOURCE_USERNAME: ${DB_USERNAME:-postgres}
+
+      # Database password used by Spring Boot
+      SPRING_DATASOURCE_PASSWORD: ${DB_PASSWORD:-password}
+
+    depends_on:
+
+      # This ensures the database container starts first.
+      db:
+
+        # Wait until PostgreSQL passes the healthcheck
+        # before starting the Spring Boot application.
+        condition: service_healthy
+
+
+# --------------------------------------------------
+# VOLUME DEFINITIONS
+# --------------------------------------------------
+
+# Define named Docker volumes used by containers.
+volumes:
+
+  # Volume used to store PostgreSQL database files.
+  pgdata:
