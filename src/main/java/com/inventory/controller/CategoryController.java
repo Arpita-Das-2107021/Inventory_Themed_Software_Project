@@ -47,7 +47,7 @@ import org.springframework.web.servlet.mvc.support.RedirectAttributes;
 @RequestMapping("/categories")
 
 // Only allow these roles to access this controller
-@PreAuthorize("hasAnyRole('SHOP_MANAGER','ORGANIZATION_ADMIN')")
+@PreAuthorize("hasAnyRole('EMPLOYEE','SHOP_MANAGER','ORGANIZATION_ADMIN')")
 
 // Automatically creates constructor for final fields
 @RequiredArgsConstructor

@@ -95,19 +95,19 @@ public class SaleService {
         }
 
         Set<String> roles = roleNames(seller);
-        boolean isShopManager = roles.contains("ROLE_SHOP_MANAGER");
+        boolean isShopStaff = roles.contains("ROLE_SHOP_MANAGER") || roles.contains("ROLE_EMPLOYEE");
 
         // Check a condition before running code.
-        if (!isShopManager) {
+        if (!isShopStaff) {
             // Throw an exception for an error case.
-            throw new IllegalArgumentException("Only shop managers can create sales.");
+            throw new IllegalArgumentException("Only shop staff can create sales.");
         // Close the current code block.
         }
 
         // Check a condition before running code.
         if (seller.getShop() == null) {
             // Throw an exception for an error case.
-            throw new IllegalArgumentException("Shop managers must be assigned to a shop before selling products.");
+            throw new IllegalArgumentException("Shop staff must be assigned to a shop before selling products.");
         // Close the current code block.
         }
 

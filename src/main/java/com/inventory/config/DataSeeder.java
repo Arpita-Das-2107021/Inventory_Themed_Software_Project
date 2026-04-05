@@ -21,6 +21,7 @@ import org.springframework.jdbc.core.JdbcTemplate;
 
 // used to encrypt passwords
 import org.springframework.security.crypto.password.PasswordEncoder;
+import org.springframework.context.annotation.Profile;
 
 // marks this as a Spring component (auto-run)
 import org.springframework.stereotype.Component;
@@ -34,6 +35,7 @@ import java.util.List;
 
 @Slf4j // enables logging
 @Component // Spring will detect and run this class
+@Profile("!test")
 @RequiredArgsConstructor // constructor auto-generated
 public class DataSeeder implements ApplicationRunner {
 

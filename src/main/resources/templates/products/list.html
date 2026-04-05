@@ -39,7 +39,7 @@
         <a
           href="/products/new"
           class="btn btn-dark"
-          sec:authorize="hasAnyRole('SHOP_MANAGER','ORGANIZATION_ADMIN')"
+          sec:authorize="hasAnyRole('EMPLOYEE','SHOP_MANAGER','ORGANIZATION_ADMIN')"
         >
           <i class="bi bi-plus-lg me-1"></i>Add Product
         </a>
@@ -96,11 +96,11 @@
                 <th>Threshold</th>
                 <th>Status</th>
                 <th
-                  sec:authorize="hasAnyRole('SHOP_MANAGER','ORGANIZATION_ADMIN')"
+                  sec:authorize="hasAnyRole('EMPLOYEE','SHOP_MANAGER','ORGANIZATION_ADMIN')"
                 >
                   Actions
                 </th>
-                <th sec:authorize="hasRole('SHOP_MANAGER')">Sell</th>
+                <th sec:authorize="hasAnyRole('EMPLOYEE','SHOP_MANAGER')">Sell</th>
               </tr>
             </thead>
             <tbody>
@@ -149,7 +149,7 @@
                   >
                 </td>
                 <td
-                  sec:authorize="hasAnyRole('SHOP_MANAGER','ORGANIZATION_ADMIN')"
+                  sec:authorize="hasAnyRole('EMPLOYEE','SHOP_MANAGER','ORGANIZATION_ADMIN')"
                 >
                   <div class="btn-group btn-group-sm">
                     <a
@@ -185,7 +185,7 @@
                     </form>
                   </div>
                 </td>
-                <td sec:authorize="hasRole('SHOP_MANAGER')">
+                <td sec:authorize="hasAnyRole('EMPLOYEE','SHOP_MANAGER')">
                   <a
                     th:href="@{/sales/new(productId=${product.id})}"
                     class="btn btn-outline-success btn-sm"

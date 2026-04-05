@@ -75,7 +75,7 @@ public class SecurityConfig {
             .authorizeHttpRequests(auth -> auth
 
                 // public routes (no login needed)
-                .requestMatchers("/auth/**", "/css/**", "/js/**", "/images/**", "/error/**").permitAll()
+                .requestMatchers("/auth/**", "/css/**", "/js/**", "/images/**", "/error", "/error/**").permitAll()
 
                 // only admin can access
                 .requestMatchers("/admin/logs").hasRole("ORGANIZATION_ADMIN")
@@ -97,7 +97,7 @@ public class SecurityConfig {
 
                 // product-related routes
                 .requestMatchers("/products/**", "/categories/**")
-                .hasAnyRole("SHOP_MANAGER", "ORGANIZATION_ADMIN")
+                .hasAnyRole("EMPLOYEE", "SHOP_MANAGER", "ORGANIZATION_ADMIN")
 
                 // all other requests need login
                 .anyRequest().authenticated()

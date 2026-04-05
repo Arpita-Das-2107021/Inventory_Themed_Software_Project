@@ -39,10 +39,6 @@ jobs:
 
       - name: Run tests
         run: mvn clean verify -Dtest=!**/*ControllerTest
-        env:
-          SPRING_DATASOURCE_URL: jdbc:postgresql://localhost:5432/inventory_test
-          SPRING_DATASOURCE_USERNAME: postgres
-          SPRING_DATASOURCE_PASSWORD: password
 
       - name: Upload test reports
         if: always()
