@@ -33,7 +33,7 @@
             </li>
             <li
               class="nav-item"
-              sec:authorize="hasAnyRole('SHOP_MANAGER','ORGANIZATION_ADMIN')"
+              sec:authorize="hasAnyRole('EMPLOYEE','SHOP_MANAGER','ORGANIZATION_ADMIN')"
             >
               <a
                 class="nav-link"
@@ -57,7 +57,7 @@
             </li>
             <li
               class="nav-item"
-              sec:authorize="hasAnyRole('SHOP_MANAGER','ORGANIZATION_ADMIN')"
+              sec:authorize="hasAnyRole('EMPLOYEE','SHOP_MANAGER','ORGANIZATION_ADMIN')"
             >
               <a
                 class="nav-link"
