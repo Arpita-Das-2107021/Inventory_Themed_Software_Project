@@ -11,6 +11,7 @@ import com.inventory.repository.ProductRepository;
 import com.inventory.repository.ShopRepository;
 import com.inventory.repository.StockTransactionRepository;
 import lombok.RequiredArgsConstructor;
+import org.springframework.security.access.AccessDeniedException;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -38,6 +39,10 @@ public class ProductService {
     }
     @Transactional(readOnly = true)
     public List<Product> getManageableProducts(User actor) {
+        if (actor == null) {
+            return List.of();
+        }
+
         // Set a configuration key and value.
         Set<String> roleNames = actor.getRoles().stream().map(Role::getName).collect(Collectors.toSet());
         // Check a condition before running code.
@@ -47,13 +52,13 @@ public class ProductService {
         // Close the current code block.
         }
         // Check a condition before running code.
-        if (roleNames.contains("ROLE_SHOP_MANAGER") && actor.getShop() != null) {
+        if ((roleNames.contains("ROLE_SHOP_MANAGER") || roleNames.contains("ROLE_EMPLOYEE")) && actor.getShop() != null) {
             // Return a value from this method.
             return productRepository.findByShopIdAndActiveTrue(actor.getShop().getId());
         // Close the current code block.
         }
         // Return a value from this method.
-        return productRepository.findByActiveTrue();
+        return List.of();
     // Close the current code block.
     }
     @Transactional(readOnly = true)
@@ -88,6 +93,12 @@ public class ProductService {
                 .orElseThrow(() -> new ResourceNotFoundException("Product not found with id: " + id));
     // Close the current code block.
     }
+    @Transactional(readOnly = true)
+    public Product getProductByIdForActor(Long id, User actor) {
+        Product product = getProductById(id);
+        assertCanManageProduct(actor, product);
+        return product;
+    }
     @Transactional
     public Product createProduct(Product product, User actor, Long requestedShopId) {
         // Check a condition before running code.
@@ -100,14 +111,18 @@ public class ProductService {
         // Set a configuration key and value.
         Set<String> roleNames = actor.getRoles().stream().map(Role::getName).collect(Collectors.toSet());
 
-        // Check a condition before running code.
-        if (roleNames.contains("ROLE_SHOP_MANAGER")) {
+        if (roleNames.contains("ROLE_SHOP_MANAGER") || roleNames.contains("ROLE_EMPLOYEE")) {
             // Check a condition before running code.
             if (actor.getShop() == null) {
                 // Throw an exception for an error case.
-                throw new IllegalArgumentException("Assign this shop admin to a shop before creating products.");
+                throw new IllegalArgumentException("Assign this staff account to a shop before creating products.");
             // Close the current code block.
             }
+
+            if (requestedShopId != null && !requestedShopId.equals(actor.getShop().getId())) {
+                throw new AccessDeniedException("You can only create products in your assigned shop.");
+            }
+
             product.setShop(actor.getShop());
         } else if (roleNames.contains("ROLE_ORGANIZATION_ADMIN")) {
             // Check a condition before running code.
@@ -131,7 +146,7 @@ public class ProductService {
             product.setShop(targetShop);
         } else {
             // Throw an exception for an error case.
-            throw new IllegalArgumentException("Only organization admins and shop managers can create products.");
+            throw new IllegalArgumentException("Only organization admins, shop managers, and employees can create products.");
         // Close the current code block.
         }
 
@@ -159,11 +174,29 @@ public class ProductService {
     // Close the current code block.
     }
     @Transactional
+    public Product updateProductForActor(Long id, Product updated, User actor) {
+        Product existing = getProductByIdForActor(id, actor);
+        existing.setName(updated.getName());
+        existing.setDescription(updated.getDescription());
+        existing.setPrice(updated.getPrice());
+        existing.setLowStockThreshold(updated.getLowStockThreshold());
+        existing.setCategory(updated.getCategory());
+        // Return a value from this method.
+        return productRepository.save(existing);
+    // Close the current code block.
+    }
+    @Transactional
     public void deleteProduct(Long id) {
         Product product = getProductById(id);
         product.setActive(false);
         productRepository.save(product);
     // Close the current code block.
+    }
+    @Transactional
+    public void deleteProductForActor(Long id, User actor) {
+        Product product = getProductByIdForActor(id, actor);
+        product.setActive(false);
+        productRepository.save(product);
     }
 
     /**
@@ -174,6 +207,15 @@ public class ProductService {
     @Transactional
     public Product adjustStock(Long productId, int quantityDelta, String type, String reason) {
         Product product = getProductById(productId);
+        return adjustStockInternal(product, quantityDelta, type, reason);
+    }
+    @Transactional
+    public Product adjustStockForActor(Long productId, int quantityDelta, String type, String reason, User actor) {
+        Product product = getProductByIdForActor(productId, actor);
+        return adjustStockInternal(product, quantityDelta, type, reason);
+    }
+
+    private Product adjustStockInternal(Product product, int quantityDelta, String type, String reason) {
         int newStock = product.getStockQuantity() + quantityDelta;
 
         // Check a condition before running code.
@@ -203,6 +245,37 @@ public class ProductService {
         // Return a value from this method.
         return product;
     // Close the current code block.
+    }
+
+    private void assertCanManageProduct(User actor, Product product) {
+        if (actor == null) {
+            throw new AccessDeniedException("You do not have permission to access this product.");
+        }
+
+        Set<String> roleNames = actor.getRoles().stream().map(Role::getName).collect(Collectors.toSet());
+
+        if (roleNames.contains("ROLE_ORGANIZATION_ADMIN")) {
+            boolean sameOrganization = actor.getOrganization() != null
+                    && product.getShop() != null
+                    && product.getShop().getOrganization() != null
+                    && actor.getOrganization().getId().equals(product.getShop().getOrganization().getId());
+            if (!sameOrganization) {
+                throw new AccessDeniedException("You can only access products in your organization.");
+            }
+            return;
+        }
+
+        if (roleNames.contains("ROLE_SHOP_MANAGER") || roleNames.contains("ROLE_EMPLOYEE")) {
+            boolean sameShop = actor.getShop() != null
+                    && product.getShop() != null
+                    && actor.getShop().getId().equals(product.getShop().getId());
+            if (!sameShop) {
+                throw new AccessDeniedException("You can only access products in your assigned shop.");
+            }
+            return;
+        }
+
+        throw new AccessDeniedException("You do not have permission to access this product.");
     }
     @Transactional(readOnly = true)
     public List<Product> getLowStockProducts() {

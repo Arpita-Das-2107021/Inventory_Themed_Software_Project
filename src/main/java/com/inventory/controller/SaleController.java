@@ -39,7 +39,7 @@ public class SaleController {
     // Close the current code block.
     }
     @GetMapping("/new")
-    @PreAuthorize("hasRole('SHOP_MANAGER')")
+    @PreAuthorize("hasAnyRole('SHOP_MANAGER','EMPLOYEE')")
     public String newSaleForm(@AuthenticationPrincipal UserDetails userDetails,
                               @RequestParam(value = "productId", required = false) Long productId,
                               Model model) {
@@ -63,7 +63,7 @@ public class SaleController {
     // Close the current code block.
     }
     @PostMapping
-    @PreAuthorize("hasRole('SHOP_MANAGER')")
+    @PreAuthorize("hasAnyRole('SHOP_MANAGER','EMPLOYEE')")
     public String createSale(
             @Valid @ModelAttribute("saleRequest") SaleRequest request,
             BindingResult bindingResult,

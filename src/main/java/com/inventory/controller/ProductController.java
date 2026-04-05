@@ -34,7 +34,7 @@ public class ProductController {
     private final AuditLogService auditLogService;
     private final UserService userService;
     @GetMapping
-    @PreAuthorize("hasAnyRole('SHOP_MANAGER','ORGANIZATION_ADMIN')")
+    @PreAuthorize("hasAnyRole('EMPLOYEE','SHOP_MANAGER','ORGANIZATION_ADMIN')")
     public String listProducts(@RequestParam(required = false) String search,
                                @AuthenticationPrincipal UserDetails user,
                                Model model) {
@@ -55,7 +55,7 @@ public class ProductController {
     // Close the current code block.
     }
     @GetMapping("/new")
-    @PreAuthorize("hasAnyRole('SHOP_MANAGER','ORGANIZATION_ADMIN')")
+    @PreAuthorize("hasAnyRole('EMPLOYEE','SHOP_MANAGER','ORGANIZATION_ADMIN')")
     public String newProductForm(@AuthenticationPrincipal UserDetails user, Model model) {
         User actor = userService.findByEmail(user.getUsername()).orElseThrow();
         model.addAttribute("product", new Product());
@@ -65,7 +65,7 @@ public class ProductController {
     // Close the current code block.
     }
     @PostMapping
-    @PreAuthorize("hasAnyRole('SHOP_MANAGER','ORGANIZATION_ADMIN')")
+    @PreAuthorize("hasAnyRole('EMPLOYEE','SHOP_MANAGER','ORGANIZATION_ADMIN')")
     public String createProduct(
             @Valid @ModelAttribute("product") Product product,
             BindingResult bindingResult,
@@ -105,13 +105,13 @@ public class ProductController {
     // Close the current code block.
     }
     @GetMapping("/{id}/edit")
-    @PreAuthorize("hasAnyRole('SHOP_MANAGER','ORGANIZATION_ADMIN')")
+    @PreAuthorize("hasAnyRole('EMPLOYEE','SHOP_MANAGER','ORGANIZATION_ADMIN')")
     public String editProductForm(@PathVariable Long id,
                                   @AuthenticationPrincipal UserDetails user,
                                   Model model) {
         User actor = userService.findByEmail(user.getUsername()).orElseThrow();
-        Product existing = productService.getProductById(id);
-        model.addAttribute("product", productService.getProductById(id));
+        Product existing = productService.getProductByIdForActor(id, actor);
+        model.addAttribute("product", existing);
         // Set a configuration key and value.
         populateFormContext(model, actor, existing.getShop() != null ? existing.getShop().getId() : null,
                 "/products/" + id, "put");
@@ -120,7 +120,7 @@ public class ProductController {
     // Close the current code block.
     }
     @PutMapping("/{id}")
-    @PreAuthorize("hasAnyRole('SHOP_MANAGER','ORGANIZATION_ADMIN')")
+    @PreAuthorize("hasAnyRole('EMPLOYEE','SHOP_MANAGER','ORGANIZATION_ADMIN')")
     public String updateProduct(
             @PathVariable Long id,
             @Valid @ModelAttribute("product") Product product,
@@ -143,7 +143,7 @@ public class ProductController {
         // Check a condition before running code.
         if (categoryId != null) product.setCategory(categoryService.getById(categoryId));
 
-        productService.updateProduct(id, product);
+        productService.updateProductForActor(id, product, actor);
         auditLogService.log(user.getUsername(), "UPDATE_PRODUCT", "Product",
                 // Set a configuration key and value.
                 String.valueOf(id), "Updated: " + product.getName());
@@ -153,12 +153,13 @@ public class ProductController {
     // Close the current code block.
     }
     @DeleteMapping("/{id}")
-    @PreAuthorize("hasAnyRole('SHOP_MANAGER','ORGANIZATION_ADMIN')")
+    @PreAuthorize("hasAnyRole('EMPLOYEE','SHOP_MANAGER','ORGANIZATION_ADMIN')")
     public String deleteProduct(@PathVariable Long id,
                                 @AuthenticationPrincipal UserDetails user,
                                 RedirectAttributes redirectAttributes) {
-        String name = productService.getProductById(id).getName();
-        productService.deleteProduct(id);
+        User actor = userService.findByEmail(user.getUsername()).orElseThrow();
+        String name = productService.getProductByIdForActor(id, actor).getName();
+        productService.deleteProductForActor(id, actor);
         auditLogService.log(user.getUsername(), "DELETE_PRODUCT", "Product",
                 // Set a configuration key and value.
                 String.valueOf(id), "Deleted: " + name);
@@ -168,9 +169,12 @@ public class ProductController {
     // Close the current code block.
     }
     @GetMapping("/{id}/stock")
-    @PreAuthorize("hasAnyRole('SHOP_MANAGER','ORGANIZATION_ADMIN')")
-    public String stockAdjustmentForm(@PathVariable Long id, Model model) {
-        model.addAttribute("product", productService.getProductById(id));
+    @PreAuthorize("hasAnyRole('EMPLOYEE','SHOP_MANAGER','ORGANIZATION_ADMIN')")
+    public String stockAdjustmentForm(@PathVariable Long id,
+                                      @AuthenticationPrincipal UserDetails user,
+                                      Model model) {
+        User actor = userService.findByEmail(user.getUsername()).orElseThrow();
+        model.addAttribute("product", productService.getProductByIdForActor(id, actor));
         model.addAttribute("stockAdjustmentRequest", new StockAdjustmentRequest());
         model.addAttribute("history", productService.getStockHistory(id));
         // Return a value from this method.
@@ -178,7 +182,7 @@ public class ProductController {
     // Close the current code block.
     }
     @PatchMapping("/{id}/stock")
-    @PreAuthorize("hasAnyRole('SHOP_MANAGER','ORGANIZATION_ADMIN')")
+    @PreAuthorize("hasAnyRole('EMPLOYEE','SHOP_MANAGER','ORGANIZATION_ADMIN')")
     public String adjustStock(
             @PathVariable Long id,
             @Valid @ModelAttribute("stockAdjustmentRequest") StockAdjustmentRequest request,
@@ -187,9 +191,11 @@ public class ProductController {
             RedirectAttributes redirectAttributes,
             Model model) {
 
+        User actor = userService.findByEmail(user.getUsername()).orElseThrow();
+
         // Check a condition before running code.
         if (bindingResult.hasErrors()) {
-            model.addAttribute("product", productService.getProductById(id));
+            model.addAttribute("product", productService.getProductByIdForActor(id, actor));
             model.addAttribute("history", productService.getStockHistory(id));
             // Return a value from this method.
             return "products/stock-form";
@@ -199,7 +205,7 @@ public class ProductController {
         int delta = request.getType().equals("DECREASE") || request.getType().equals("SALE")
                 // Set a configuration key and value.
                 ? -request.getQuantity() : request.getQuantity();
-        productService.adjustStock(id, delta, request.getType(), request.getReason());
+        productService.adjustStockForActor(id, delta, request.getType(), request.getReason(), actor);
         auditLogService.log(user.getUsername(), "STOCK_ADJUST", "Product",
                 // Set a configuration key and value.
                 String.valueOf(id), "Type: " + request.getType() + ", Qty: " + request.getQuantity());
