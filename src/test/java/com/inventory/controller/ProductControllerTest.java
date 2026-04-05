@@ -51,8 +51,13 @@ class ProductControllerTest {
             roleRepository.save(Role.builder().name("ROLE_ORGANIZATION_ADMIN").build());
         // Close the current code block.
         }
+        if (roleRepository.findByName("ROLE_EMPLOYEE").isEmpty()) {
+            roleRepository.save(Role.builder().name("ROLE_EMPLOYEE").build());
+        // Close the current code block.
+        }
 
         Role managerRole = roleRepository.findByName("ROLE_SHOP_MANAGER").orElseThrow();
+        Role employeeRole = roleRepository.findByName("ROLE_EMPLOYEE").orElseThrow();
         User manager = userRepository.findByEmail("manager@test.local").orElseGet(() -> {
             User user = User.builder()
                     .username("manager")
@@ -73,6 +78,21 @@ class ProductControllerTest {
         manager.setOrganization(org);
         manager.setShop(shop);
         userRepository.save(manager);
+
+        User employee = userRepository.findByEmail("employee@test.local").orElseGet(() -> {
+            User user = User.builder()
+                    .username("employee")
+                    .email("employee@test.local")
+                    .password("noop")
+                    .active(true)
+                    .build();
+            user.getRoles().add(employeeRole);
+            return userRepository.save(user);
+        });
+        employee.setOrganization(org);
+        employee.setShop(shop);
+        employee.setManager(false);
+        userRepository.save(employee);
     // Close the current code block.
     }
 
@@ -121,12 +141,13 @@ class ProductControllerTest {
     }
 
     // Set a configuration key and value.
-    // Integration Test 7: EMPLOYEE cannot access /products (forbidden)
+    // Integration Test 7: EMPLOYEE can access /products
     @Test
-    @WithMockUser(roles = "EMPLOYEE")
-    void getProducts_asBuyer_shouldBeForbidden() throws Exception {
+    @WithMockUser(username = "employee@test.local", roles = "EMPLOYEE")
+    void getProducts_asEmployee_shouldReturn200() throws Exception {
         mockMvc.perform(get("/products"))
-                .andExpect(status().isForbidden());
+                .andExpect(status().isOk())
+                .andExpect(view().name("products/list"));
     // Close the current code block.
     }
 // Close the current code block.
