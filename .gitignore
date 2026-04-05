@@ -1,33 +1,8 @@
-# Maven / Java
-/target/
-**/target/
-*.class
-*.log
-
-# IntelliJ
-.idea/
-*.iml
-
-# Eclipse
-.classpath
-.project
-.settings/
-
-# VSCode
-.vscode/
-
-# OS files
-.DS_Store
-Thumbs.db
-
-# Environment
-.env
-
-# Generated resources
-/generated-sources/
-/generated-test-sources/
 # Compiled class file
 *.class
+
+# Maven build output
+target/
 
 # Log file
 *.log
@@ -50,3 +25,16 @@ Thumbs.db
 # virtual machine crash logs, see http://www.java.com/en/download/help/error_hotspot.xml
 hs_err_pid*
 replay_pid*
+
+# Environment variables
+.env
+.env.local
+.env.production
+
+# IDE
+.idea/
+.vscode/
+*.iml
+*.iws
+*.ipr
+.DS_Store

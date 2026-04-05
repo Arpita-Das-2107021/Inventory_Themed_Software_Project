@@ -1,0 +1,212 @@
+<!doctype html>
+<html
+  xmlns:th="http://www.thymeleaf.org"
+  xmlns:sec="http://www.thymeleaf.org/extras/springsecurity6"
+>
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>New Sale & Invoice - Inventory</title>
+    <link
+      href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css"
+      rel="stylesheet"
+    />
+    <link
+      href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.0/font/bootstrap-icons.css"
+      rel="stylesheet"
+    />
+    <style>
+      body {
+        padding-top: 56px;
+        background-color: #f8f9fa;
+      }
+      .navbar-brand {
+        font-weight: 700;
+      }
+      .item-row {
+        background-color: #fff;
+        border: 1px solid #dee2e6;
+        border-radius: 8px;
+        padding: 1rem;
+        margin-bottom: 0.75rem;
+      }
+    </style>
+  </head>
+  <body>
+    <nav th:replace="~{fragments/nav :: appNavbar('sales')}"></nav>
+
+    <div class="container py-4" style="max-width: 800px">
+      <div class="d-flex align-items-center mb-4">
+        <a href="/sales" class="btn btn-outline-secondary btn-sm me-3">
+          <i class="bi bi-arrow-left"></i> Back
+        </a>
+        <h1 class="h3 fw-bold mb-0">
+          <i class="bi bi-cart-plus me-2"></i>New Sale & Invoice
+        </h1>
+      </div>
+
+      <div th:if="${errorMessage}" class="alert alert-danger">
+        <i class="bi bi-exclamation-triangle me-2"></i>
+        <span th:text="${errorMessage}"></span>
+      </div>
+
+      <div class="card shadow-sm">
+        <div class="card-body p-4">
+          <form th:action="@{/sales}" method="post" id="saleForm">
+            <div class="mb-4">
+              <label for="buyerName" class="form-label fw-semibold"
+                >Buyer Name</label
+              >
+              <input
+                type="text"
+                id="buyerName"
+                name="buyerName"
+                class="form-control"
+                placeholder="Enter buyer name"
+                th:value="${saleRequest.buyerName}"
+                required
+              />
+            </div>
+
+            <div id="itemsContainer">
+              <!-- Item row template -->
+              <div class="item-row" id="item-0">
+                <div class="row g-3 align-items-end">
+                  <div class="col-md-7">
+                    <label class="form-label fw-semibold">Product</label>
+                    <select
+                      name="items[0].productId"
+                      class="form-select product-select"
+                      required
+                    >
+                      <option value="">-- Select product --</option>
+                      <option
+                        th:each="p : ${products}"
+                        th:value="${p.id}"
+                        th:text="${p.name + ' (Stock: ' + p.stockQuantity + ')'}"
+                        th:disabled="${p.stockQuantity == 0}"
+                        th:selected="${selectedProductId != null and p.id == selectedProductId}"
+                      ></option>
+                    </select>
+                  </div>
+                  <div class="col-md-3">
+                    <label class="form-label fw-semibold">Quantity</label>
+                    <input
+                      type="number"
+                      name="items[0].quantity"
+                      class="form-control"
+                      min="1"
+                      value="1"
+                      required
+                    />
+                  </div>
+                  <div class="col-md-2">
+                    <button
+                      type="button"
+                      class="btn btn-outline-danger w-100 remove-item"
+                      disabled
+                    >
+                      <i class="bi bi-trash"></i>
+                    </button>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <button
+              type="button"
+              id="addItem"
+              class="btn btn-outline-secondary btn-sm mt-2"
+            >
+              <i class="bi bi-plus-lg me-1"></i>Add Another Product
+            </button>
+
+            <hr class="my-4" />
+
+            <div class="d-flex gap-2">
+              <button type="submit" class="btn btn-dark btn-lg">
+                <i class="bi bi-receipt-cutoff me-1"></i>Sell & Generate Invoice
+              </button>
+              <a href="/sales" class="btn btn-outline-secondary btn-lg"
+                >Cancel</a
+              >
+            </div>
+          </form>
+        </div>
+      </div>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    <script>
+      let itemCount = 1;
+
+      function buildProductOptions() {
+        // Reuse server-rendered options from the first row for consistent labels and disabled states.
+        const firstSelect = document.querySelector(
+          "#itemsContainer select.product-select",
+        );
+        return firstSelect
+          ? firstSelect.innerHTML
+          : '<option value="">-- Select product --</option>';
+      }
+
+      document.getElementById("addItem").addEventListener("click", function () {
+        const container = document.getElementById("itemsContainer");
+        const div = document.createElement("div");
+        div.className = "item-row";
+        div.id = "item-" + itemCount;
+        div.innerHTML = `
+            <div class="row g-3 align-items-end">
+                <div class="col-md-7">
+                    <label class="form-label fw-semibold">Product</label>
+                    <select name="items[${itemCount}].productId" class="form-select product-select" required>
+                        ${buildProductOptions()}
+                    </select>
+                </div>
+                <div class="col-md-3">
+                    <label class="form-label fw-semibold">Quantity</label>
+                    <input type="number" name="items[${itemCount}].quantity" class="form-control" min="1" value="1" required/>
+                </div>
+                <div class="col-md-2">
+                    <button type="button" class="btn btn-outline-danger w-100 remove-item">
+                        <i class="bi bi-trash"></i>
+                    </button>
+                </div>
+            </div>`;
+        container.appendChild(div);
+        itemCount++;
+        updateRemoveButtons();
+      });
+
+      document
+        .getElementById("itemsContainer")
+        .addEventListener("click", function (e) {
+          if (e.target.closest(".remove-item")) {
+            const row = e.target.closest(".item-row");
+            row.remove();
+            reindexItems();
+            updateRemoveButtons();
+          }
+        });
+
+      function reindexItems() {
+        const rows = document.querySelectorAll(".item-row");
+        rows.forEach((row, idx) => {
+          row.id = "item-" + idx;
+          row.querySelector("select").name = `items[${idx}].productId`;
+          row.querySelector('input[type="number"]').name =
+            `items[${idx}].quantity`;
+        });
+        itemCount = rows.length;
+      }
+
+      function updateRemoveButtons() {
+        const rows = document.querySelectorAll(".item-row");
+        rows.forEach((row) => {
+          const btn = row.querySelector(".remove-item");
+          btn.disabled = rows.length === 1;
+        });
+      }
+    </script>
+  </body>
+</html>

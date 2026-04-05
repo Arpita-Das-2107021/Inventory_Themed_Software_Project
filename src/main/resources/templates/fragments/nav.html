@@ -1,0 +1,159 @@
+<!doctype html>
+<html
+  xmlns:th="http://www.thymeleaf.org"
+  xmlns:sec="http://www.thymeleaf.org/extras/springsecurity6"
+>
+  <body>
+    <nav
+      th:fragment="appNavbar(activePage)"
+      class="navbar navbar-expand-lg navbar-dark bg-dark fixed-top"
+    >
+      <div class="container-fluid">
+        <a class="navbar-brand" href="/dashboard"
+          ><i class="bi bi-boxes me-2"></i>Inventory</a
+        >
+        <button
+          class="navbar-toggler"
+          type="button"
+          data-bs-toggle="collapse"
+          data-bs-target="#navbarNav"
+        >
+          <span class="navbar-toggler-icon"></span>
+        </button>
+        <div class="collapse navbar-collapse" id="navbarNav">
+          <ul class="navbar-nav me-auto">
+            <li class="nav-item">
+              <a
+                class="nav-link"
+                th:classappend="${activePage == 'dashboard'} ? ' active'"
+                href="/dashboard"
+              >
+                <i class="bi bi-speedometer2 me-1"></i>Dashboard
+              </a>
+            </li>
+            <li
+              class="nav-item"
+              sec:authorize="hasAnyRole('SHOP_MANAGER','ORGANIZATION_ADMIN')"
+            >
+              <a
+                class="nav-link"
+                th:classappend="${activePage == 'products'} ? ' active'"
+                href="/products"
+              >
+                <i class="bi bi-box-seam me-1"></i>Products
+              </a>
+            </li>
+            <li
+              class="nav-item"
+              sec:authorize="hasAnyRole('EMPLOYEE','SHOP_MANAGER','ORGANIZATION_ADMIN')"
+            >
+              <a
+                class="nav-link"
+                th:classappend="${activePage == 'sales'} ? ' active'"
+                href="/sales"
+              >
+                <i class="bi bi-cart3 me-1"></i>Sales
+              </a>
+            </li>
+            <li
+              class="nav-item"
+              sec:authorize="hasAnyRole('SHOP_MANAGER','ORGANIZATION_ADMIN')"
+            >
+              <a
+                class="nav-link"
+                th:classappend="${activePage == 'categories'} ? ' active'"
+                href="/categories"
+              >
+                <i class="bi bi-tags me-1"></i>Categories
+              </a>
+            </li>
+            <li
+              class="nav-item dropdown"
+              sec:authorize="hasAnyRole('SHOP_MANAGER','ORGANIZATION_ADMIN')"
+            >
+              <a
+                class="nav-link dropdown-toggle"
+                href="#"
+                role="button"
+                data-bs-toggle="dropdown"
+                th:classappend="${activePage == 'reports'} ? ' active'"
+              >
+                <i class="bi bi-bar-chart-line me-1"></i>Reports
+              </a>
+              <ul class="dropdown-menu">
+                <li>
+                  <a class="dropdown-item" href="/reports/sales"
+                    >Sales Report</a
+                  >
+                </li>
+                <li>
+                  <a class="dropdown-item" href="/reports/inventory"
+                    >Inventory Report</a
+                  >
+                </li>
+                <li>
+                  <a class="dropdown-item" href="/reports/seller-activity"
+                    >Seller Activity</a
+                  >
+                </li>
+              </ul>
+            </li>
+            <li
+              class="nav-item dropdown"
+              sec:authorize="hasAnyRole('SHOP_MANAGER','ORGANIZATION_ADMIN')"
+            >
+              <a
+                class="nav-link dropdown-toggle"
+                href="#"
+                role="button"
+                data-bs-toggle="dropdown"
+                th:classappend="${activePage == 'management'} ? ' active'"
+              >
+                <i class="bi bi-building me-1"></i>Management
+              </a>
+              <ul class="dropdown-menu">
+                <li sec:authorize="hasRole('ORGANIZATION_ADMIN')">
+                  <a class="dropdown-item" href="/shops"
+                    ><i class="bi bi-shop me-1"></i>Shops</a
+                  >
+                </li>
+                <li>
+                  <a class="dropdown-item" href="/admin/users"
+                    ><i class="bi bi-people me-1"></i>Staff</a
+                  >
+                </li>
+                <li sec:authorize="hasRole('ORGANIZATION_ADMIN')">
+                  <a class="dropdown-item" href="/admin/logs"
+                    ><i class="bi bi-journal-text me-1"></i>Audit Logs</a
+                  >
+                </li>
+              </ul>
+            </li>
+          </ul>
+          <ul class="navbar-nav ms-auto">
+            <li class="nav-item dropdown" sec:authorize="isAuthenticated()">
+              <a
+                class="nav-link dropdown-toggle"
+                href="#"
+                role="button"
+                data-bs-toggle="dropdown"
+              >
+                <i class="bi bi-person-circle me-1"></i
+                ><span sec:authentication="name">User</span>
+              </a>
+              <ul class="dropdown-menu dropdown-menu-end">
+                <li>
+                  <form th:action="@{/auth/logout}" method="post">
+                    <button class="dropdown-item" type="submit">
+                      <i class="bi bi-box-arrow-right me-1"></i>Logout
+                    </button>
+                  </form>
+                </li>
+              </ul>
+            </li>
+          </ul>
+        </div>
+      </div>
+    </nav>
+  </body>
+</html>

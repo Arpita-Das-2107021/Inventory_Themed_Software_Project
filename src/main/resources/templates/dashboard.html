@@ -1,0 +1,183 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org"
+      xmlns:sec="http://www.thymeleaf.org/extras/springsecurity6">
+<head>
+    <meta charset="UTF-8"/>
+    <meta name="viewport" content="width=device-width, initial-scale=1"/>
+    <title>Dashboard — Inventory</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet"/>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.0/font/bootstrap-icons.css" rel="stylesheet"/>
+    <style>
+        body { padding-top: 56px; background-color: #f8f9fa; }
+        .navbar-brand { font-weight: 700; }
+        .stat-card { transition: transform .2s; border: none; box-shadow: 0 0.125rem 0.25rem rgba(0,0,0,.075); }
+        .stat-card:hover { transform: translateY(-3px); }
+        .low-stock { background-color: #fff3cd !important; }
+    </style>
+</head>
+<body>
+<nav th:replace="~{fragments/nav :: appNavbar('dashboard')}"></nav>
+
+<div class="container-fluid px-4 py-4">
+    <h1 class="h3 fw-bold mb-4"><i class="bi bi-speedometer2 me-2"></i>Dashboard</h1>
+
+    <!-- Stats Row -->
+    <div class="row g-4 mb-4">
+        <div class="col-sm-6 col-xl-3">
+            <div class="card stat-card h-100">
+                <div class="card-body d-flex align-items-center">
+                    <div class="rounded-circle bg-primary bg-opacity-10 p-3 me-3">
+                        <i class="bi bi-box-seam fs-3 text-primary"></i>
+                    </div>
+                    <div>
+                        <div class="text-muted small">Total Products</div>
+                        <div class="fs-3 fw-bold" th:text="${metrics.totalProducts}">0</div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="col-sm-6 col-xl-3">
+            <div class="card stat-card h-100">
+                <div class="card-body d-flex align-items-center">
+                    <div class="rounded-circle bg-success bg-opacity-10 p-3 me-3">
+                        <i class="bi bi-cart-check fs-3 text-success"></i>
+                    </div>
+                    <div>
+                        <div class="text-muted small">Total Sales</div>
+                        <div class="fs-3 fw-bold" th:text="${metrics.totalSales}">0</div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="col-sm-6 col-xl-3">
+            <div class="card stat-card h-100">
+                <div class="card-body d-flex align-items-center">
+                    <div class="rounded-circle bg-warning bg-opacity-10 p-3 me-3">
+                        <i class="bi bi-currency-dollar fs-3 text-warning"></i>
+                    </div>
+                    <div>
+                        <div class="text-muted small">Total Revenue</div>
+                        <div class="fs-3 fw-bold" th:text="'$' + ${#numbers.formatDecimal(metrics.totalRevenue, 1, 2)}">$0.00</div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="col-sm-6 col-xl-3">
+            <div class="card stat-card h-100">
+                <div class="card-body d-flex align-items-center">
+                    <div class="rounded-circle bg-danger bg-opacity-10 p-3 me-3">
+                        <i class="bi bi-exclamation-triangle fs-3 text-danger"></i>
+                    </div>
+                    <div>
+                        <div class="text-muted small">Low Stock Alerts</div>
+                        <div class="fs-3 fw-bold text-danger" th:text="${metrics.lowStockCount}">0</div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Admin-only: Total Users -->
+    <div class="row g-4 mb-4" sec:authorize="hasRole('ORGANIZATION_ADMIN')">
+        <div class="col-sm-6 col-xl-3">
+            <div class="card stat-card h-100">
+                <div class="card-body d-flex align-items-center">
+                    <div class="rounded-circle bg-info bg-opacity-10 p-3 me-3">
+                        <i class="bi bi-people fs-3 text-info"></i>
+                    </div>
+                    <div>
+                        <div class="text-muted small">Total Users</div>
+                        <div class="fs-3 fw-bold" th:text="${metrics.totalUsers}">0</div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Today Row -->
+    <div class="row g-4 mb-4">
+        <div class="col-md-6">
+            <div class="card">
+                <div class="card-body">
+                    <h6 class="text-muted mb-1">Sales Today</h6>
+                    <div class="fs-4 fw-bold" th:text="${metrics.salesToday}">0</div>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-6">
+            <div class="card">
+                <div class="card-body">
+                    <h6 class="text-muted mb-1">Revenue Today</h6>
+                    <div class="fs-4 fw-bold" th:text="'$' + ${#numbers.formatDecimal(metrics.revenueToday, 1, 2)}">$0.00</div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Low Stock Table -->
+    <div class="card mb-4" th:if="${metrics.lowStockCount > 0}">
+        <div class="card-header d-flex justify-content-between align-items-center">
+            <h5 class="mb-0 text-danger"><i class="bi bi-exclamation-triangle me-2"></i>Low Stock Products</h5>
+            <a href="/reports/inventory" class="btn btn-sm btn-outline-secondary">View Full Report</a>
+        </div>
+        <div class="table-responsive">
+            <table class="table table-hover mb-0">
+                <thead class="table-light">
+                    <tr>
+                        <th>Product</th>
+                        <th>Stock</th>
+                        <th>Threshold</th>
+                        <th>Action</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr th:each="product : ${metrics.lowStockProducts}" class="low-stock">
+                        <td th:text="${product.name}"></td>
+                        <td><span class="badge bg-danger" th:text="${product.stockQuantity}"></span></td>
+                        <td th:text="${product.lowStockThreshold}"></td>
+                        <td>
+                            <a th:href="@{/products/{id}/stock(id=${product.id})}" class="btn btn-sm btn-warning">
+                                <i class="bi bi-plus-circle me-1"></i>Restock
+                            </a>
+                        </td>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
+    </div>
+
+    <!-- Admin-only: Recent Audit Logs -->
+    <div class="card" sec:authorize="hasRole('ORGANIZATION_ADMIN')" th:if="${recentLogs != null and !#lists.isEmpty(recentLogs)}">
+        <div class="card-header d-flex justify-content-between align-items-center">
+            <h5 class="mb-0"><i class="bi bi-journal-text me-2"></i>Recent Activity</h5>
+            <a href="/admin/logs" class="btn btn-sm btn-outline-secondary">View All Logs</a>
+        </div>
+        <div class="table-responsive">
+            <table class="table table-sm table-hover mb-0">
+                <thead class="table-light">
+                    <tr>
+                        <th>User</th>
+                        <th>Action</th>
+                        <th>Entity</th>
+                        <th>Details</th>
+                        <th>Time</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr th:each="log : ${recentLogs}">
+                        <td class="small" th:text="${log.userEmail}"></td>
+                        <td><span class="badge bg-secondary" th:text="${log.action}"></span></td>
+                        <td class="small" th:text="${log.entityType}"></td>
+                        <td class="small text-muted" th:text="${log.details}"></td>
+                        <td class="small text-muted" th:text="${#temporals.format(log.createdAt, 'MMM d, HH:mm')}"></td>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+</body>
+</html>
+
+
